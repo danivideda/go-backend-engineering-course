@@ -1,3 +1,3 @@
 # Go: Complete Backend Course
 
-Youtube link: https://www.youtube.com/watch?v=h3fqD6IprIA
+Udemy link: https://www.udemy.com/course-dashboard-redirect/?course_id=6200103
