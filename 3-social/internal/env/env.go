@@ -23,7 +23,7 @@ func GetInt(key string, fallback int) int {
 
 	valAsInt, err := strconv.Atoi(val)
 	if err != nil {
-		log.Fatalf("Integer expected, '%s' given instead", val)
+		log.Printf("%s. Returning the fallback val", err.Error())
 		return fallback
 	}
 
