@@ -42,11 +42,16 @@ func (app *application) mount() http.Handler {
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
 
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		writeJSON(w, http.StatusOK, map[string]string{"ping": "pong"})
+	})
+
 	r.Route("/v1", func(r chi.Router) {
 		r.Get("/health", app.healthCheckHandler)
 
 		r.Route("/post", func(r chi.Router) {
 			r.Post("/", app.createPostHandler)
+			r.Get("/{id}", app.getPostHandler)
 		})
 	})
 
