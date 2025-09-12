@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/lib/pq"
 )
@@ -10,9 +11,9 @@ import (
 type Post struct {
 	ID        int64    `json:"id"`
 	Title     string   `json:"title"`
+	UserID    int64    `json:"user_id"`
 	Content   string   `json:"content"`
 	Tags      []string `json:"tags"`
-	UserID    int64    `json:"user_id"`
 	CreatedAt string   `json:"created_at"`
 	UpdatedAt string   `json:"updated_at"`
 }
@@ -22,7 +23,11 @@ type PostStore struct {
 }
 
 func (s *PostStore) Create(ctx context.Context, post *Post) error {
-	query := `INSERT INTO posts (content, title, user_id, tags) VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at`
+	query := `
+		INSERT INTO posts (content, title, user_id, tags) 
+		VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at
+	`
+
 	err := s.db.QueryRowContext(ctx, query, post.Content, post.Title, post.UserID, pq.Array(post.Tags)).Scan(
 		&post.ID,
 		&post.CreatedAt,
@@ -36,19 +41,30 @@ func (s *PostStore) Create(ctx context.Context, post *Post) error {
 	return nil
 }
 
-func (s *PostStore) Get(ctx context.Context, post *Post) error {
-	query := "SELECT * FROM posts WHERE id = $1"
-	err := s.db.QueryRowContext(ctx, query, post.ID).Scan(
+func (s *PostStore) GetById(ctx context.Context, postID int64) (*Post, error) {
+	query := `
+		SELECT id, title, user_id, content, tags, created_at, updated_at 
+		FROM posts WHERE id = $1
+	`
+
+	var post Post
+	err := s.db.QueryRowContext(ctx, query, postID).Scan(
 		&post.ID,
 		&post.Title,
 		&post.UserID,
 		&post.Content,
-		&post.CreatedAt,
 		pq.Array(&post.Tags),
+		&post.CreatedAt,
 		&post.UpdatedAt,
 	)
 	if err != nil {
-		return err
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
 	}
-	return nil
+
+	return &post, nil
 }

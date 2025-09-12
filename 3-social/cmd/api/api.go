@@ -51,7 +51,10 @@ func (app *application) mount() http.Handler {
 
 		r.Route("/post", func(r chi.Router) {
 			r.Post("/", app.createPostHandler)
-			r.Get("/{id}", app.getPostHandler)
+
+			r.Route("/{postID}", func(r chi.Router) {
+				r.Get("/", app.getPostHandler)
+			})
 		})
 	})
 
@@ -67,7 +70,7 @@ func (app *application) run(mux http.Handler) error {
 		IdleTimeout:  time.Minute,
 	}
 
-	log.Printf("Listening on port: %s", app.config.addr)
+	log.Printf("Listening on %s", app.config.addr)
 
 	return srv.ListenAndServe()
 }
