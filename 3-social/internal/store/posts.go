@@ -42,7 +42,7 @@ func (s *PostStore) Create(ctx context.Context, post *Post) error {
 	return nil
 }
 
-func (s *PostStore) GetById(ctx context.Context, postID int64) (*Post, error) {
+func (s *PostStore) GetByID(ctx context.Context, postID int64) (*Post, error) {
 	query := `
 		SELECT id, title, user_id, content, tags, created_at, updated_at 
 		FROM posts WHERE id = $1
@@ -68,4 +68,26 @@ func (s *PostStore) GetById(ctx context.Context, postID int64) (*Post, error) {
 	}
 
 	return &post, nil
+}
+
+func (s *PostStore) Delete(ctx context.Context, postID int64) error {
+	query := `DELETE FROM posts WHERE id = $1`
+	if _, err := s.db.ExecContext(ctx, query, postID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *PostStore) Update(ctx context.Context, post *Post) error {
+	query := `
+		UPDATE posts
+		SET title = $1, content = $2
+		WHERE id = $3
+	`
+	if _, err := s.db.ExecContext(ctx, query, post.Title, post.Content, post.ID); err != nil {
+		return err
+	}
+
+	return nil
 }

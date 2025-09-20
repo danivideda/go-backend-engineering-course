@@ -19,7 +19,7 @@ type CommentStore struct {
 	db *sql.DB
 }
 
-func (s *CommentStore) GetByPostId(ctx context.Context, postID int64) ([]Comment, error) {
+func (s *CommentStore) GetByPostID(ctx context.Context, postID int64) ([]Comment, error) {
 	query := `
 		SELECT c.id, c.post_id, c.user_id, c.content, c.created_at, u.username, u.id FROM comments AS c
 		JOIN users AS u ON c.user_id = u.id

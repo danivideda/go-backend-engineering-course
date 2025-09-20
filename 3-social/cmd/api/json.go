@@ -7,10 +7,10 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-var Validator *validator.Validate
+var Validate *validator.Validate
 
 func init() {
-	Validator = validator.New()
+	Validate = validator.New()
 }
 
 func writeJSON(w http.ResponseWriter, status int, data any) error {
