@@ -27,3 +27,7 @@ migrate-force version:
 # Migrate to specified version
 migrate-goto version:
     @migrate -path={{migration_path}} -database=${DB_ADDR} goto {{version}}
+
+# Seed the database
+seed:
+    @go run cmd/migrate/seed/*.go
