@@ -15,6 +15,7 @@ func main() {
 	if err != nil {
 		log.Panicln("Database conn failed:", err)
 	}
+	defer conn.Close()
 
 	store := store.NewStorage(conn)
 	db.Seed(store)
