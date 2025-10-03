@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -130,8 +129,8 @@ func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
 
 		post, err := app.store.Posts.GetByID(ctx, postID)
 		if err != nil {
-			switch {
-			case errors.Is(err, store.ErrNotFound):
+			switch err {
+			case store.ErrNotFound:
 				app.notFoundResponse(w, r, err)
 			default:
 				app.internalServerErrorResponse(w, r, err)
