@@ -28,12 +28,6 @@ type FollowUser struct {
 	UserID int64 `json:"user_id"`
 }
 
-func (app *application) testingCustom(w http.ResponseWriter, r *http.Request) {
-	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
-		app.internalServerErrorResponse(w, r, err)
-	}
-}
-
 func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	followUser := getUserFromCtx(ctx)
