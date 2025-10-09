@@ -105,8 +105,9 @@ var comments = []string{
 func Seed(store store.Storage) {
 	ctx := context.Background()
 
-	users := generateUsers(100)
-	for _, user := range users {
+	users := generateUsers(500)
+	for i, user := range users {
+		fmt.Println("Creating user: ", i+1)
 		err := store.Users.Create(ctx, user)
 		if err != nil {
 			log.Println("Error creating user:", err)
@@ -114,8 +115,9 @@ func Seed(store store.Storage) {
 		}
 	}
 
-	posts := generatePosts(200, users)
-	for _, post := range posts {
+	posts := generatePosts(10000, users)
+	for i, post := range posts {
+		fmt.Println("Creating post: ", i+1)
 		err := store.Posts.Create(ctx, post)
 		if err != nil {
 			log.Println("Error creating post:", err)
@@ -123,14 +125,28 @@ func Seed(store store.Storage) {
 		}
 	}
 
-	comments := generateComments(500, users, posts)
-	for _, comment := range comments {
+	comments := generateComments(100000, users, posts)
+	for i, comment := range comments {
+		fmt.Println("Creating comment: ", i+1)
 		err := store.Comments.Create(ctx, comment)
 		if err != nil {
 			log.Println("Error creating comment:", err)
 			return
 		}
 	}
+
+	// generate followers
+	followers := 100000
+	for i := range followers {
+		fmt.Println("Creating follower: ", i+1)
+		followerID := rand.IntN(len(users))
+		userID := rand.IntN(len(users))
+		err := store.Followers.Follow(ctx, int64(followerID), int64(userID))
+		if err != nil {
+			log.Printf("Error creating follower (%d): %s\n", i+1, err)
+		}
+	}
+
 }
 
 func generateUsers(num int) []*store.User {

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"slices"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -16,7 +17,20 @@ func init() {
 func writeJSON(w http.ResponseWriter, status int, data any) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	return json.NewEncoder(w).Encode(data)
+
+	noContentStatus := []int{
+		http.StatusContinue,
+		http.StatusSwitchingProtocols,
+		http.StatusNoContent,
+		http.StatusResetContent,
+		http.StatusNotModified,
+	}
+
+	if !slices.Contains(noContentStatus, status) {
+		return json.NewEncoder(w).Encode(data)
+	}
+
+	return nil
 }
 
 func readJSON(w http.ResponseWriter, r *http.Request, data any) error {

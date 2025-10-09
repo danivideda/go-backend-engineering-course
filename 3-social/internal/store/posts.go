@@ -8,15 +8,21 @@ import (
 )
 
 type Post struct {
-	ID        int64     `json:"id"`
-	Title     string    `json:"title"`
-	UserID    int64     `json:"user_id"`
-	Content   string    `json:"content"`
-	Tags      []string  `json:"tags"`
-	Version   int       `json:"version"`
-	CreatedAt string    `json:"created_at"`
-	UpdatedAt string    `json:"updated_at"`
-	Comments  []Comment `json:"comments"`
+	ID        int64     `json:"id,omitempty"`
+	Title     string    `json:"title,omitempty"`
+	UserID    int64     `json:"user_id,omitempty"`
+	Content   string    `json:"content,omitempty"`
+	Tags      []string  `json:"tags,omitempty"`
+	Version   int       `json:"version,omitempty"`
+	CreatedAt string    `json:"created_at,omitempty"`
+	UpdatedAt string    `json:"updated_at,omitempty"`
+	Comments  []Comment `json:"comments,omitempty"`
+	User      User      `json:"user"`
+}
+
+type PostWithMetadata struct {
+	Post
+	CommentCount *int `json:"comment_count,omitempty"`
 }
 
 type PostStore struct {
@@ -108,4 +114,50 @@ func (s *PostStore) Update(ctx context.Context, post *Post) error {
 	}
 
 	return nil
+}
+
+func (s *PostStore) GetUserFeed(ctx context.Context, userID int64) ([]PostWithMetadata, error) {
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	query := `
+		SELECT p.id, p.user_id, u.username, p.title, p.content, p.created_at, p.version, p.tags, 
+		COUNT(c.id) AS comments_count
+		FROM posts p 
+		LEFT JOIN comments c ON c.post_id = p.id
+		LEFT JOIN users u ON p.user_id = u.id
+		LEFT JOIN followers f ON f.user_id = p.user_id
+		WHERE (f.user_id = p.user_id AND f.follower_id = $1) OR p.user_id = $1
+		GROUP BY p.id, u.username
+		ORDER BY p.created_at DESC;
+	`
+
+	rows, err := s.db.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var feed []PostWithMetadata
+	for rows.Next() {
+		var p PostWithMetadata
+		err = rows.Scan(
+			&p.ID, 
+			&p.UserID, 
+			&p.User.Username, 
+			&p.Title, 
+			&p.Content, 
+			&p.CreatedAt, 
+			&p.Version, 
+			pq.Array(&p.Tags), 
+			&p.CommentCount,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		feed = append(feed, p)
+	}
+
+	return feed, nil
 }
